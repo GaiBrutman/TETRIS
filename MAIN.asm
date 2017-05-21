@@ -10,7 +10,10 @@ DATASEG
 ; <name>	<size>		<value>
 ;			db/dw/dd	?/*
 
-	RGB		db		00h, 00h, 0ffh,		33h, 0ffh, 33h,		33h, 99h, 0ffh,		0ffh, 33h, 33h,		99h, 33h, 0ffh,		0ffh, 99h, 33h,		0ffh, 0ffh, 33h
+	mapColor		db	?
+
+;									[Blue]					[Green]				[Cyan]				[Red]					[Purple]				[Orange]			[Yellow]
+	RGB		db		00h, 80h, 0ffh,		00h, 0ffh, 00h,		66h, 0ffh, 0ffh,		0ffh, 00h, 00h,		66h, 00h, 0cch,		0ffh, 90h, 00h,		0ffh, 0ffh, 0h
 	
 	loopcount1	db	?
 	loopcount2	db	?
@@ -18,6 +21,7 @@ DATASEG
 	nextStr	db		'NEXT BLOCK$'
 
 	Clock equ es:6Ch
+
 	x 		dw 		0
 	y 		dw 		0
 	color 	db		4
@@ -31,11 +35,6 @@ DATASEG
 	count	dw		0h
 	adress  dw		?
 	check	dw		0h
-	loopTimes1	db	4
-	loopTimes2	db	4						;0000
-											;0000
-											;1000
-											;1110
 	timeToCheck	db		0
 	
 	form	dw		?	
@@ -45,6 +44,10 @@ DATASEG
 	formwz	dw		0000000010001110b, 0000000001101100b, 0000000000001111b, 0000000011000110b, 0000000001001110b, 0000000000101110b, 0000000011001100b
 	
 	flipedForm	dw	?
+	
+	delayT		dw		2h
+	
+	checkType	db	1
 	
 ; --------------------------
 CODESEG
@@ -62,12 +65,19 @@ start:
 
 	mov ax, 13h
 	int 10h
-	
+
 	call aditPallette
 	
 	call DrawWall
 	
+
+	
 	newDraw:
+	call checkRow
+	call checkRow
+	call checkRow
+	call checkRow
+	
 	mov [flipedForm], 0h
 	mov [timeToCheck], 0h
 	
@@ -101,6 +111,8 @@ start:
 	
 	WaitForData :
 	
+	
+	
 	push ax
 	push bx
 	push cx
@@ -108,8 +120,6 @@ start:
 	push [sizeX]
 	push [sizeY]
 	
-	mov [sizeX], 40
-	mov [sizeY], 40
 	mov [check], 0h
 	push offset check
 	call checkColor
@@ -125,6 +135,7 @@ didntCollide:
 	mov [timeToCheck], 0h
 
 WHATEVER:
+	mov [delayT], 2
 	
 	pop [sizeY]
 	pop [sizeX]
@@ -163,9 +174,13 @@ WHATEVER:
 	cmp al, 04dh ; Is it the RIGHT key ?
 	je right
 	cmp al, 48h ; Is it the UP key ?
-	je up
+	jne Nup
+	jmp up
+	Nup:
 	cmp al, 50h ; Is it the DOWN key ?
-	je down
+	jne Ndown
+	jmp down
+	Ndown:
 
 	call sleep
 
@@ -174,35 +189,48 @@ WHATEVER:
 	
 	jmp WaitForData
 	
-	toNewDraw:
-	jmp newDraw
-	
 	left:
-	
+		mov [checkType], 0
+		mov [check], 0h
+		push offset check
+		call checkColor
+		mov [checkType], 1
+		cmp [check], 1
+		jz toWait
+		
 		call undraw
 		sub [x], 10
 	
 		call DrawBlock
-
+		
+		toWait:
 		call sleep
-	
 		cmp [timeToCheck], 4h
 		jz toNewDraw
-		
 		jmp WaitForData
 	
+	toNewDraw:
+	jmp newDraw
+	
 	right:
+		
+		mov [checkType], 2
+		mov [check], 0h
+		push offset check
+		call checkColor
+		mov [checkType], 1
+		cmp [check], 1
+		jz toWait2
 		
 		call undraw
 		add [x], 10
 	
 		call DrawBlock
 		
+		toWait2:
 		call sleep
-		
 		cmp [timeToCheck], 4h
 		jz toNewDraw
-		
 		jmp WaitForData
 	
 	up:
@@ -226,13 +254,11 @@ WHATEVER:
 		cmp [timeToCheck], 0h
 		ja toNewDraw
 		
-		call undraw
-		add [y], 10
-
-		call DrawBlock
-	
+		push [delayT]
+		sub [delayT], 2
 		call sleep
-
+		pop [delayT]
+		
 		jmp WaitForData
 
 exit:

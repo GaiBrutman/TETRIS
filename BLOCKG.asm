@@ -131,13 +131,12 @@ proc DrawBlock
 	
 	mov al, [color]
 	mov bh, 0h
+	mov cx, [x]
+	mov dx, [y]
 
-	push [x]
-	push [y]
-	
-	mov [loopTimes1], 4
+	mov [loopcount1], 4
 	loopDraw1:
-		mov [loopTimes2], 4
+		mov [loopcount2], 4
 		loopDraw2:
 			shl [form], 1
 			jc toDrawS
@@ -146,23 +145,23 @@ proc DrawBlock
 			toDrawS:
 			mov [sizeX], 10
 			mov [sizeY], 10
-			mov cx, [x]
-			mov dx, [y]
+			
+			push cx dx
 			call draw
+			pop dx cx
+			
 			againS:
-			add [x], 10
-			dec [loopTimes2]
-			cmp [loopTimes2], 0
+			add cx, 10
+			dec [loopcount2]
+			cmp [loopcount2], 0
 			jnz loopDraw2
 		
-		add [y], 10
-		sub [x], 40
-		dec [loopTimes1]
-		cmp [loopTimes1], 0
+		add dx, 10
+		sub cx, 40
+		dec [loopcount1]
+		cmp [loopcount1], 0
 		jnz loopDraw1
 		
-	pop [y]
-	pop [x]
 	pop [form]
 	
 	pop dx

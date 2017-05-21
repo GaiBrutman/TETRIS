@@ -7,7 +7,6 @@ proc bitPlacer
 	mov cl, [loopcount1]
 	cmp cl, 0h
 	jz z1
-	inc cl
 	
 	@@loopa:
 		shr ax, 4
@@ -29,6 +28,23 @@ proc bitPlacer
 	
 	z2:
 	
+	cmp [checkType], 1	;	0	- left,	1 - down,		2 - right
+	ja	@@rightShift
+	jb	@@leftShift
+	
+	@@downShift:
+	shr ax, 4
+	
+	jmp @@done
+	@@rightShift:
+	shr ax, 1
+	
+	jmp @@done
+	@@leftShift:
+	shl ax, 1
+	
+	@@done:
+	
 ;	pop [loopcount2]
 	pop cx	
 	ret
@@ -39,8 +55,8 @@ proc sleep
 	push dx
 	push bx
 	
-	mov cx, 2h
-	mov	dx, 49f0h
+	mov cx, [delayT]
+	mov	dx, 3000h
 	mov ah, 86h
 	int 15h
 	
@@ -60,10 +76,23 @@ proc checkColor
 	mov bh,0h
 	mov cx,[x]
 	mov dx,[y]
-	add dx, 10
-;	add dx, [sizeY]
 	
-;	mov bl, [byte ptr sizeX]
+	cmp [checkType], 1	;	0	- left,	1 - down,		2 - right
+	ja	@@rightShift
+	jb	@@leftShift
+	
+	@@downShift:
+	add dx, 10
+	
+	jmp @@done
+	@@rightShift:
+	add cx, 10
+	
+	jmp @@done
+	@@leftShift:
+	dec cx
+	
+	@@done:
 	
 	mov [loopcount1], 0
 	@@loopa:
