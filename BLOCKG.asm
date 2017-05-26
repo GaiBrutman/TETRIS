@@ -54,6 +54,9 @@ proc Flip
 	;}
 	
 	@@END_PROC: ;{
+		
+		call FlipFix
+		
 		POP DX
 		POP CX
 		POP BX
@@ -67,6 +70,19 @@ proc Flip
 ;}
 	
 endp Flip
+
+proc FlipFix
+	
+@@loopa:
+	test NUMBER, 0fh
+	jnz stop
+	shr NUMBER, 4
+	jmp @@loopa
+	
+	stop:
+	ret
+	
+endp FlipFix
 
 proc draw
 	; ip | parameter1
@@ -104,6 +120,9 @@ proc DrawBlock
 	push dx
 	
 	push bx
+	
+	cmp [flipedForm], 2h
+	jz continue
 	
 	cmp [flipedForm], 0h
 	

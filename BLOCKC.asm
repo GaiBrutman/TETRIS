@@ -51,18 +51,21 @@ proc bitPlacer
 endp bitPlacer
 
 proc sleep
-	push cx
-	push dx
-	push bx
+	push ax bx cx dx
 	
 	mov cx, [delayT]
-	mov	dx, 3000h
-	mov ah, 86h
-	int 15h
+	@@loopa:
+		push cx
+		
+		mov cx, 20000
+		@@loopb:
+		nop
+		loop @@loopb
+		
+		pop cx
+	loop @@loopa
 	
-	pop bx
-	pop dx
-	pop cx
+	pop dx cx bx ax
 	
 	ret
 endp sleep
@@ -112,7 +115,7 @@ proc checkColor
 				mov ah,0Dh
 				int 10h
 				cmp al, 0h
-				jnz collides
+				jnz @@collides
 			
 		NotTry:
 		inc [loopcount2]
@@ -125,13 +128,67 @@ proc checkColor
 	sub cx, 40
 	cmp [loopcount1], 4h
 	jnz @@loopa
-	jmp notCollides
+	jmp @@notCollides
 
-	collides:
+	@@collides:
 		mov [word ptr check], 1h
-	notCollides:
+	@@notCollides:
 	
 	pop [form]
 	push [adress]
 	ret
 endp checkColor
+
+proc CheckFlip
+	pop [adress]
+	
+	pop [canFlip]
+	
+	push ax bx cx dx
+	push [flipedForm]
+	
+	mov bh, 0h
+	mov cx, [x]
+	mov dx, [y]
+
+	mov [loopcount1], 4
+	@@loopa:
+		mov [loopcount2], 4
+		@@loopb:
+			shl [flipedForm], 1
+			jc @@check
+			jmp @@again
+			@@check:
+				mov ah,0Dh
+				int 10h
+				cmp al, 0h
+				jnz @@collides
+			@@again:
+			add cx, 10
+			dec [loopcount2]
+			cmp [loopcount2], 0
+			jnz @@loopb
+		
+		add dx, 10
+		sub cx, 40
+		dec [loopcount1]
+		cmp [loopcount1], 0
+		jnz @@loopa
+		
+	jmp @@notCollides
+	
+	@@collides:
+		mov [canFlip], 1h
+		pop [flipedForm]
+		pop dx cx bx ax
+		push [adress]
+		ret
+	@@notCollides:
+	mov [canFlip], 0h
+	pop [flipedForm]
+	pop dx cx bx ax
+	push [adress]
+	ret
+	
+	ret
+endp CheckFlip

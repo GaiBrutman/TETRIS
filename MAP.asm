@@ -21,11 +21,82 @@ proc DrawWall
 	ret
 endp DrawWall
 
+proc checkLose
+	
+	push ax
+	push bx
+	push cx
+	push dx
+	
+	mov cx, 70
+	mov dx, 20
+	
+	mov [loopcount1], 12
+	@@loopa:
+		mov bh, 0
+		mov ah,0Dh
+		int 10h ; return al the pixel value read
+		
+		cmp al, 0h
+		jnz Lost	
+			
+		add cx, 10
+		dec [loopcount1]
+		cmp [loopcount1], 0
+		jnz @@loopa
+		
+		pop dx
+		pop cx
+		pop bx
+		pop ax
+		
+		ret
+		
+		Lost:
+		
+		call AddHighScore
+		
+		mov ax,3h
+		int 10h
+		
+		call OpenFile
+		call WriteToFile
+		call CloseFile
+		
+		mov dx, offset loseStr
+		mov ah, 9h
+		int 21h
+		
+		mov dl, 0ah
+		mov ah, 2h
+		int 21h
+		
+		mov dx, offset T10Str
+		mov ah, 9h
+		int 21h
+		
+		mov dx, 0ah
+		mov ah, 2h
+		int 21h
+		mov dx, 13
+		mov ah, 2h
+		int 21h
+		
+		
+		call PrintHighScore
+		
+		mov ax, 4c00h
+		int 21h
+	
+endp checkLose
+
 proc checkRow
 	push ax
 	push bx
 	push cx
 	push dx
+	
+	@@again:
 	
 	mov cx, 70
 	mov dx, 180
@@ -45,12 +116,11 @@ proc checkRow
 			dec [loopcount2]
 			cmp [loopcount2], 0
 			jnz @@loopb
-		
-			mov [delayT] , 2h
+			
 			sub dx, 10
 			call sleep
 			call DeleteRow
-			add dx, 10
+			jmp @@again
 		
 		dontDelete:
 		
@@ -74,11 +144,11 @@ proc DeleteRow
 	push cx
 	push dx
 	
-	mov cx, 70
-	;mov dx, 170
-	;xor bx, bx
+	add [score], 90
+	inc [lines]
 	
-	;mov [loopcount1], 17
+	mov cx, 70
+	
 	@@loopa:
 		mov [loopcount2], 12
 		@@loopb:

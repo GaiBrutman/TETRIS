@@ -9,45 +9,73 @@ DATASEG
 ; Your variables here
 ; <name>	<size>		<value>
 ;			db/dw/dd	?/*
+	score					dw		0
+	lines						dw		0
+	level						dw		1h
 
-	mapColor		db	?
+	delayT					dw		100d
 
-;									[Blue]					[Green]				[Cyan]				[Red]					[Purple]				[Orange]			[Yellow]
-	RGB		db		00h, 80h, 0ffh,		00h, 0ffh, 00h,		66h, 0ffh, 0ffh,		0ffh, 00h, 00h,		66h, 00h, 0cch,		0ffh, 90h, 00h,		0ffh, 0ffh, 0h
-	
-	loopcount1	db	?
-	loopcount2	db	?
+	flipedForm			dw		?
 
-	nextStr	db		'NEXT BLOCK$'
+	canFlip				dw		0h
 
-	Clock equ es:6Ch
+	mapColor				db		?
 
-	x 		dw 		0
-	y 		dw 		0
-	color 	db		4
-	nextColor	db	1
-	sizeX	dw		?
-	temp	dw		?
-	tempForm	dw		?
+;												[Blue]					[Green]				[Cyan]				[Red]					[Purple]				[Orange]			[Yellow]
+	RGB					db		00h, 80h, 0ffh,		00h, 0ffh, 00h,		66h, 0ffh, 0ffh,		0ffh, 00h, 00h,		66h, 00h, 0cch,		0ffh, 90h, 00h,		0ffh, 0ffh, 0h
+	
+	loopcount1			db		?
+	loopcount2			db		?
+
+	nextStr				db		'NEXT BLOCK$'
+	loseStr					db		'YOU LOST!$'
+	T10Str				db		'TOP 10 SCORES:$'
+	ScoreStr				db		'SCORE$'
+	HighScoreStr		db		'NEW HIGHSCORE! (PRESS ENTER TO CONTINUE)$'
+	EnterNameStr		db		'ENTER NAME (THREE DIGITS): $'
+	nme 					db 		6 dup (?)
+	
+	
+	Clock					equ		es:6Ch
+
+	x 							dw 		0
+	y							dw		0
+	color 					db		4
+	nextColor			db		1
+	sizeX					dw		?
+	temp					dw		?
+	tempForm			dw		?
 
 	
-	sizeY	dw		?
-	count	dw		0h
-	adress  dw		?
-	check	dw		0h
-	timeToCheck	db		0
+	sizeY					dw		?
+	count					dw		0h
+	adress  				dw		?
+	check					dw		0h
+	timeToCheck		db		0
 	
-	form	dw		?	
-	nextForm	dw		0
+	form						dw		?	
+	nextForm			dw		0
 	
-;											J									S									I									Z									T									L									O
-	formwz	dw		0000000010001110b, 0000000001101100b, 0000000000001111b, 0000000011000110b, 0000000001001110b, 0000000000101110b, 0000000011001100b
+;														J									S									I									Z									T									L									O
+	formwz				dw		0000000010001110b, 0000000001101100b, 0000000000001111b, 0000000011000110b, 0000000001001110b, 0000000000101110b, 0000000011001100b
 	
-	flipedForm	dw	?
 	
-	delayT		dw		2h
 	
-	checkType	db	1
+	
+	checkType			db		1
+	
+	filename				db		'top10.txt',0
+	filehandle				dw		?
+
+	ErrorMsg			db		'Error', 10, 13,'$'
+	
+	
+	Buffer					db		'AAA', 0, 0, 'AAA', 0, 0, 'AAA', 0, 0, 'AAA', 0, 0, 'AAA', 0, 0, 'AAA', 0, 0, 'AAA', 0, 0, 'AAA', 0, 0, 'AAA', 0, 0, 'AAA', 0, 0	; 'WIN90BOB57JMS50JOE36BER23JON22Jek15JOK12ABA09ABB06’
+	
+	print_dec				db		0,0,0,0,0,'$'
+	score_arr				db		0,0,0,0,0
+	
+	note						dw		2394h ; 1193180 / 131 -> (hex)
 	
 ; --------------------------
 CODESEG
@@ -57,6 +85,7 @@ CODESEG
 	include "BLOCKG.asm"
 	include "BLOCKC.asm"
 	include "COLOR.asm"
+	include "SCORE.asm"
 
 start:
 ;{	
@@ -65,24 +94,28 @@ start:
 
 	mov ax, 13h
 	int 10h
-
+	
+;	call OpenFile
+;	call WriteToFile
+;	call CloseFile
+	
 	call aditPallette
 	
 	call DrawWall
 	
-
-	
 	newDraw:
+	call checkLose
+	
 	call checkRow
-	call checkRow
-	call checkRow
-	call checkRow
+	
+	call ShowScore
 	
 	mov [flipedForm], 0h
 	mov [timeToCheck], 0h
+	;mov [delayT], 900
 	
 	mov [x], 120
-	mov [y], 10
+	mov [y], 0
 	
 	; random form and color
 		mov bl, [nextColor]
@@ -112,7 +145,6 @@ start:
 	WaitForData :
 	
 	
-	
 	push ax
 	push bx
 	push cx
@@ -135,7 +167,6 @@ didntCollide:
 	mov [timeToCheck], 0h
 
 WHATEVER:
-	mov [delayT], 2
 	
 	pop [sizeY]
 	pop [sizeX]
@@ -209,8 +240,6 @@ WHATEVER:
 		jz toNewDraw
 		jmp WaitForData
 	
-	toNewDraw:
-	jmp newDraw
 	
 	right:
 		
@@ -233,39 +262,67 @@ WHATEVER:
 		jz toNewDraw
 		jmp WaitForData
 	
-	up:
+	toNewDraw:
 	
+	call sound
+	
+	add [score], 10
+	jmp newDraw
+	
+	up:
 		call undraw
 		
 		push [form]
 		call Flip
 		pop [flipedForm]
 	
+		mov [canFlip], 0h
+		push offset canFlip
+		call CheckFlip
+		cmp [canFlip], 0h
+		ja dontFlip
+		jmp doFlip
+		dontFlip:
+		mov [canFlip], 0h
+		mov [flipedForm], 2h
+		
+		;jmp WaitForData
+		
+	doFlip:
+
 		call DrawBlock
 	
 		call sleep
 		
-		;cmp [timeToCheck], 4h
-		;jz toNewDraw
-
 		jmp WaitForData
 	
 	down:
 		cmp [timeToCheck], 0h
 		ja toNewDraw
 		
-		push [delayT]
-		sub [delayT], 2
+		push [delayT] ax bx
+		mov ax, [delayT]
+		mov bl, 10
+		div bl
+		xor ah, ah
+		mov [delayT], ax
+		;sub [delayT], 800
+		
 		call sleep
-		pop [delayT]
+		
+		pop bx ax [delayT]
 		
 		jmp WaitForData
 
 exit:
 	mov ax,3h
-	int 10h
-	
-	mov ax, 4c00h
-	int 21h
+		int 10h
+		
+		mov dx, offset nextStr
+		mov ah, 9h
+		int 21h
+		
+		mov ax, 4c00h
+		int 21h
 END start
 ;}

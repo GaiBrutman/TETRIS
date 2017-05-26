@@ -12,6 +12,33 @@ RANDSTART:
 	ret
 endp Randomize
 
+proc sound
+	out     43h, al         ;  note.
+    mov     ax, 9121        ; Frequency number (in decimal)
+                                ;  for middle C.
+	out     42h, al         ; Output low byte.
+	mov     al, ah          ; Output high byte.
+	out     42h, al 
+	in      al, 61h         ; Turn on note (get value from
+                                ;  port 61h).
+	or      al, 00000011b   ; Set bits 1 and 0.
+	out     61h, al         ; Send new value.
+	mov     bx, 25          ; Pause for duration of note.
+pause1:
+	mov     cx, 65535
+pause2:
+	dec     cx
+	jne     pause2
+	dec     bx
+	jne     pause1
+	in      al, 61h         ; Turn off note (get value from
+                                ;  port 61h).
+	and     al, 11111100b   ; Reset bits 1 and 0.
+	out     61h, al         ; Send new value.
+		
+	ret
+endp sound
+
 proc drawNext
 	push [word ptr color]
 	push di
@@ -34,7 +61,7 @@ proc drawNext
 	
 	mov al, 2
 	mov bh, 0h
-	mov cx, 245
+	mov cx, 235
 	mov dx, 30
 	mov [sizeX], 60
 	mov [sizeY], 60
@@ -43,7 +70,7 @@ proc drawNext
 	
 	mov al, 0
 	mov bh, 0h
-	mov cx, 250
+	mov cx, 240
 	mov dx, 35
 	mov [sizeX], 50
 	mov [sizeY], 50
@@ -51,7 +78,7 @@ proc drawNext
 	call draw
 	
 	; AH=2h: Set cursor position
-	mov dl, 29 ; Column
+	mov dl, 28 ; Column
 	mov dh, 2 ; Row
 	mov bx, 0 ; Page number, 0 for graphics modes
 	mov ah, 2h
@@ -62,7 +89,7 @@ proc drawNext
 	mov ah, 9h
 	int 21h
 	
-	mov [x], 255
+	mov [x], 245
 	mov [y], 40
 		
 	mov bl, [nextColor]
@@ -79,3 +106,37 @@ proc drawNext
 	pop [word ptr color]
 	ret
 endp drawNext
+
+proc ShowScore
+	mov dl, 31 ; Column
+	mov dh, 10h ; Row
+	mov bx, 0 ; Page number, 0 for graphics modes
+	mov ah, 2h
+	int 10h
+
+	mov dx, offset ScoreStr
+	mov ah, 9h
+	int 21h
+	
+	mov dl, 31 ; Column
+	mov dh, 12h ; Row
+;	mov bx, 0 ; Page number, 0 for graphics modes
+	mov ah, 2h
+	int 10h
+	
+	call PrintScore
+	
+	add dh, 2
+	mov ah, 2h
+	int 10h
+	
+	push offset score_arr
+	push [lines]
+	call HEX2DEC
+	
+	push offset score_arr
+	call TEXT_PRINTDEC
+	
+		
+	ret
+endp ShowScore
