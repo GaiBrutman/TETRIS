@@ -165,7 +165,7 @@ proc ReadFile
 	; Read file
 	mov ah,3Fh
 	mov bx, [filehandle]
-	mov cx,100h
+	mov cx,51
 	mov dx,offset Buffer
 	int 21h
 	ret
@@ -214,23 +214,12 @@ proc PrintHighScore
 		mov ah, 2h
 		int 21h
 		
-		
 		mov ah,  [Buffer + bx]
-;		add dl, 30h
-;		mov ah, 2h
-;		int 21h
-		
 		inc bx
-		
 		mov al,  [Buffer + bx]
-;		add dl, 30h
-;		mov ah, 2h
-;		int 21h
 		
-		push [score]
-		mov [score], ax
+		push ax
 		call PrintScore
-		pop [score]
 		
 		mov dl, 10
 		mov ah, 2
@@ -266,13 +255,14 @@ proc AddHighScore
 		push bx		
 		
 		@@loopEnter:
+		
 		mov ax, 13h
 		int 10h
 		
 		mov dx, offset HighScoreStr
 		mov ah, 9h
 		int 21h
-		
+			
 		mov ah, 1
 		int 21h
 		cmp al, 13
@@ -327,6 +317,8 @@ proc AddHighScore
 	cmp bx, 50
 	jb @@loopa
 	
+	;pop bx
+
 	call CloseFile
 	
 	ret
@@ -351,13 +343,53 @@ proc PushList
 endp PushList
 
 proc PrintScore
+	pop [adress]
+	pop dx
 	
 	push offset score_arr
-	push [score]
+	push dx
 	call HEX2DEC
 	
 	push offset score_arr
 	call TEXT_PRINTDEC
 	
+	push [adress]
 	ret
 endp PrintScore
+
+proc CheckLevel
+	push ax bx
+			
+		mov ax, [lines]
+
+		mov bl, 10
+	
+		div bl
+	
+		cmp ah, 0h
+		jnz doNothing
+	
+		inc [level]
+		
+		call AdjustSpeed
+	
+	doNothing:
+	
+	pop bx ax
+	ret
+endp CheckLevel
+
+proc AdjustSpeed
+
+		mov al, [byte ptr delayT]
+		mov bl, 3
+		mul bl
+		
+		mov bl, 4
+		div bl
+		xor ah, ah
+		
+	mov [delayT], ax
+	
+	ret
+endp AdjustSpeed

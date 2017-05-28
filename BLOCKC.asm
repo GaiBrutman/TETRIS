@@ -51,9 +51,10 @@ proc bitPlacer
 endp bitPlacer
 
 proc sleep
-	push ax bx cx dx
+;	push ax bx cx dx
+	pop [adress]
+	pop cx
 	
-	mov cx, [delayT]
 	@@loopa:
 		push cx
 		
@@ -65,8 +66,9 @@ proc sleep
 		pop cx
 	loop @@loopa
 	
-	pop dx cx bx ax
+;	pop dx cx bx ax
 	
+	push [adress]
 	ret
 endp sleep
 

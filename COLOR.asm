@@ -40,7 +40,7 @@ proc aditPallette
 		
 		inc bl
 		inc si
-		cmp bl, 8h
+		cmp bl, 16
 		jnz	@@loopa
 		
 	mov bl, 0

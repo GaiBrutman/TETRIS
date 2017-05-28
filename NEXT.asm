@@ -108,35 +108,52 @@ proc drawNext
 endp drawNext
 
 proc ShowScore
-	mov dl, 31 ; Column
-	mov dh, 10h ; Row
+
+	mov dx, 0d1fh ; Row, Column
 	mov bx, 0 ; Page number, 0 for graphics modes
 	mov ah, 2h
 	int 10h
-
+	
 	mov dx, offset ScoreStr
 	mov ah, 9h
 	int 21h
 	
-	mov dl, 31 ; Column
-	mov dh, 12h ; Row
-;	mov bx, 0 ; Page number, 0 for graphics modes
+	mov dx, 0f1fh ; Row, Column
 	mov ah, 2h
 	int 10h
 	
+	push [score]
 	call PrintScore
 	
-	add dh, 2
+	mov dx, 111fh ; Row, Column
 	mov ah, 2h
 	int 10h
 	
-	push offset score_arr
+	mov dx, offset LinesStr
+	mov ah, 9h
+	int 21h
+	
+	mov dx, 131fh ; Row, Column
+	mov ah, 2h
+	int 10h
+	
 	push [lines]
-	call HEX2DEC
+	call PrintScore
 	
-	push offset score_arr
-	call TEXT_PRINTDEC
+	mov dx, 151fh ; Row, Column
+	mov ah, 2h
+	int 10h
 	
+	mov dx, offset LevelStr
+	mov ah, 9h
+	int 21h
+	
+	mov dx, 171fh ; Row, Column
+	mov ah, 2h
+	int 10h
+	
+	push [level]
+	call PrintScore
 		
 	ret
 endp ShowScore

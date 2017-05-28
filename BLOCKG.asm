@@ -88,6 +88,8 @@ proc draw
 	; ip | parameter1
 	; ^
 	
+	push cx dx
+	
 	mov bx, [sizeX]
 	mov [temp], bx
 	
@@ -106,10 +108,59 @@ proc draw
 		sub cx, [temp]
 		cmp [sizeY], dx
 		jnz	loopa
+		
+	pop dx cx
 	
 	ret
 		
 endp draw
+
+proc DrawB
+	push ax
+	
+	cmp al, 0
+	jz	noColor
+	
+	mov [sizeX], 10
+	mov [sizeY], 10
+	add al, 7
+	call draw
+	
+	mov [sizeX], 9
+	mov [sizeY], 9
+	sub al, 7
+	call draw
+	
+	
+	mov al, 15
+	
+	inc cx
+	inc dx
+	
+	mov ah, 0ch
+	int 10h
+	
+	inc cx
+	mov ah, 0ch
+	int 10h
+	
+	dec cx
+	inc dx
+	mov ah, 0ch
+	int 10h
+
+	pop ax
+	ret
+	
+	noColor:
+	
+	mov [sizeX], 10
+	mov [sizeY], 10
+	call draw
+	
+	pop ax
+	ret
+endp DrawB
 
 proc DrawBlock
 	; ip | parameter1
@@ -162,11 +213,11 @@ proc DrawBlock
 			notToDrawS:
 			jmp againS
 			toDrawS:
-			mov [sizeX], 10
-			mov [sizeY], 10
+			;mov [sizeX], 10
+			;mov [sizeY], 10
 			
 			push cx dx
-			call draw
+			call drawB
 			pop dx cx
 			
 			againS:

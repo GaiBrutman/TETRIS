@@ -118,6 +118,7 @@ proc checkRow
 			jnz @@loopb
 			
 			sub dx, 10
+			push [delayT]
 			call sleep
 			call DeleteRow
 			jmp @@again
@@ -157,12 +158,12 @@ proc DeleteRow
 			mov ah,0Dh
 			int 10h ; return al the pixel value read
 			
-			mov [sizeX], 10
-			mov [sizeY], 10
+;			mov [sizeX], 10
+;			mov [sizeY], 10
 			
 			push cx dx
 			add dx, 10
-			call draw
+			call drawB
 			pop dx cx
 			
 			add cx, 10
