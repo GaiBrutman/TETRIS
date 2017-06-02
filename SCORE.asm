@@ -252,21 +252,20 @@ proc AddHighScore
 		cmp [score], ax
 		jna notRep
 		
-		push bx		
-		
-		@@loopEnter:
+		push bx
 		
 		mov ax, 13h
-		int 10h
+		int 10h	
 		
 		mov dx, offset HighScoreStr
 		mov ah, 9h
 		int 21h
 			
-		mov ah, 1
-		int 21h
-		cmp al, 13
-		jnz @@loopEnter
+	@@loopEnter:
+		mov ah, 0
+		int 16h
+		cmp ah, 1Ch
+		jne @@loopEnter
 		
 		mov dl, 0ah
 		mov ah, 2h
@@ -316,8 +315,6 @@ proc AddHighScore
 	add bx, 4
 	cmp bx, 50
 	jb @@loopa
-	
-	;pop bx
 
 	call CloseFile
 	
@@ -357,23 +354,66 @@ proc PrintScore
 	ret
 endp PrintScore
 
+
+proc EnterLevel
+	push ax cx dx
+	
+	@@start:
+	
+	mov ax, 13h
+	int 10h
+	
+	mov dx, offset EnterLevelStr
+	mov ah, 9h
+	int 21h
+	
+	mov ah, 1h
+	int 21h
+	sub al, 30h
+	mov ah, al
+	
+	mov ch, ah
+	mov ah, 1h
+	int 21h
+	mov ah, ch
+	sub al, 30h
+	
+	AAD
+	
+	push 100
+	call sleep
+	
+	cmp al, 1
+	jb @@start
+	cmp al, 15
+	ja @@start
+	
+	mov [level], al
+	
+	mov ax, 13h
+	int 10h
+	
+	pop dx cx ax
+	ret
+endp EnterLevel
+
 proc CheckLevel
 	push ax bx
 			
-		mov ax, [lines]
+	mov ax, [lines]
 
-		mov bl, 10
+	mov bl, 10
 	
-		div bl
+	div bl
+
+	cmp ah, 0h
+	jnz doNothing
 	
-		cmp ah, 0h
-		jnz doNothing
-	
-		inc [level]
+	inc [level]
 		
-		call AdjustSpeed
+	call AdjustSpeed
 	
-	doNothing:
+doNothing:
 	
 	pop bx ax
 	ret
@@ -381,13 +421,13 @@ endp CheckLevel
 
 proc AdjustSpeed
 
-		mov al, [byte ptr delayT]
-		mov bl, 3
-		mul bl
+	mov al, [byte ptr delayT]
+	mov bl, 4
+	mul bl
 		
-		mov bl, 4
-		div bl
-		xor ah, ah
+	mov bl, 5
+	div bl
+	xor ah, ah
 		
 	mov [delayT], ax
 	

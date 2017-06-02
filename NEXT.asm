@@ -137,7 +137,7 @@ proc ShowScore
 	mov ah, 2h
 	int 10h
 	
-	push [lines]
+	push [delayT]
 	call PrintScore
 	
 	mov dx, 151fh ; Row, Column
@@ -152,7 +152,9 @@ proc ShowScore
 	mov ah, 2h
 	int 10h
 	
-	push [level]
+	mov al, [level]
+	xor ah, ah
+	push ax
 	call PrintScore
 		
 	ret

@@ -1,3 +1,104 @@
+proc PauseDeGame
+	
+	push ax bx cx dx
+	
+	call PauseSave
+	
+	mov cx, 100
+	mov dx, 60
+	mov [sizeX], 60
+	mov [sizeY], 30
+	mov al, 1
+	call draw
+
+	mov dx, 090eh ; Row, Column
+	mov bx, 0 ; Page number, 0 for graphics modes
+	mov ah, 2h
+	int 10h
+	
+	mov dx, offset PauseStr
+	mov ah, 9h
+	int 21h
+	
+	mov [counter], 0
+
+	
+   @@loopEnter:
+	mov ah, 0
+	int 16h
+	cmp ah, 1Ch
+	jne @@loopEnter
+	
+	call PauseDraw
+	
+	pop dx cx bx ax
+	
+	ret
+endp PauseDeGame
+
+proc PauseSave
+	
+	push ax bx cx dx
+	
+	mov bx, 0
+	mov cx, 100
+	mov dx, 60
+	
+	@@loopa:
+		@@loopb:
+			mov bh, 0
+			mov ah,0Dh
+			int 10h ; return al the pixel value read
+		
+			mov [offset save + bx], al
+			
+			inc bx
+			add cx, 10
+			cmp cx, 160
+			jnz @@loopb
+		
+	add dx, 10
+	mov cx, 100
+	cmp dx, 90
+	jnz @@loopa	
+	
+	
+	pop dx cx bx ax
+	
+	ret
+endp PauseSave
+
+proc PauseDraw
+	
+	push ax bx cx dx
+	
+	mov bx, 0
+	mov cx, 100
+	mov dx, 60
+	
+	@@loopa:
+		@@loopb:
+			push bx cx dx
+			mov al, [offset save + bx]
+			call drawB
+			pop dx cx bx
+			
+			inc bx
+			add cx, 10
+			cmp cx, 160
+			jnz @@loopb
+		
+	add dx, 10
+	mov cx, 100
+	cmp dx, 90
+	jnz @@loopa	
+	
+	
+	pop dx cx bx ax
+	
+	ret
+endp PauseDraw
+
 proc DrawWall
 	
 	mov al, 2
@@ -147,6 +248,8 @@ proc DeleteRow
 	
 	add [score], 90
 	inc [lines]
+	
+	call CheckLevel
 	
 	mov cx, 70
 	

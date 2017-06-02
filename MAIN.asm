@@ -9,11 +9,13 @@ DATASEG
 ; Your variables here
 ; <name>	<size>		<value>
 ;			db/dw/dd	?/*
+	save						db		18 dup (0)
 	
+	counter				db		0
 	
 	score					dw		0
 	lines						dw		0
-	level						dw		1
+	level						db		1
 
 	delayT					dw		100d
 
@@ -30,7 +32,8 @@ DATASEG
 								db		0ffh, 0ffh, 0ffh
 	loopcount1			db		?
 	loopcount2			db		?
-
+	
+	PauseStr				db		'PAUSE$'
 	nextStr				db		'NEXT BLOCK$'
 	loseStr					db		'YOU LOST!$'
 	T10Str				db		'TOP 10 SCORES:$'
@@ -39,6 +42,7 @@ DATASEG
 	LevelStr				db		'LEVEL$'
 	HighScoreStr		db		'NEW HIGHSCORE! (PRESS ENTER TO CONTINUE)$'
 	EnterNameStr		db		'ENTER NAME (THREE DIGITS): $'
+	EnterLevelStr		db		'ENTER START LEVEL (01 - 15): $'
 	nme 					db 		6 dup (?)
 	
 	
@@ -76,13 +80,36 @@ DATASEG
 	ErrorMsg			db		'Error', 10, 13,'$'
 	
 	
-	Buffer					db		'AAA', 0, 0, 'AAA', 0, 0, 'AAA', 0, 0, 'AAA', 0, 0, 'AAA', 0, 0, 'AAA', 0, 0, 'AAA', 0, 0, 'AAA', 0, 0, 'AAA', 0, 0, 'AAA', 0, 0	; 'WIN90BOB57JMS50JOE36BER23JON22Jek15JOK12ABA09ABB06’
+	Buffer					db		'AAA', 0, 0, 'AAA', 0, 0, 'AAA', 0, 0, 'AAA', 0, 0, 'AAA', 0, 0, 'AAA', 0, 0, 'AAA', 0, 0, 'AAA', 0, 0, 'AAA', 0, 0, 'AAA', 0, 0
 	
 	print_dec				db		0,0,0,0,0,'$'
 	score_arr				db		0,0,0,0,0
 	
 	note						dw		2394h ; 1193180 / 131 -> (hex)
 	
+;-------------------------------;
+	MAX_BMP_WIDTH equ 320
+	MAX_BMP_HEIGHT equ 200
+;-------------------------------;
+	OneBmpLine db MAX_BMP_WIDTH dup (0)  ; One Color line read buffer
+	ScreenLineMax db MAX_BMP_WIDTH dup (0)  ; One Color line read buffer
+	;BMP File data
+;	FileHandle dw ?
+	Header db 54 dup(0)
+	Palette db 400h dup (0)
+;-------------------------------;
+	StartScreenName db 'starter.bmp', 0
+	InstructionsName db 'inst.bmp', 0
+;-------------------------------;
+	BmpFileErrorMsg db 'Error At Opening Bmp File .', 0dh, 0ah,'$'
+	ErrorFile db 0
+	BB db "BB..",'$'
+;-------------------------------;
+	BmpLeft dw ?
+	BmpTop dw ?
+	BmpColSize dw ?
+	BmpRowSize dw ?
+	SaveBGData dw 384 dup (?)
 ; --------------------------
 CODESEG
 
@@ -92,6 +119,7 @@ CODESEG
 	include "BLOCKC.asm"
 	include "COLOR.asm"
 	include "SCORE.asm"
+	include "BMP.asm"
 
 start:
 ;{	
@@ -101,11 +129,28 @@ start:
 	mov ax, 13h
 	int 10h
 	
+	call PrintStart
+	
+@@loopEnter:
+	mov ah, 0
+	int 16h
+	cmp ah, 1Ch
+	jne @@loopEnter
+	
+	mov ax, 13h
+	int 10h
+
+	call PrintInstr
+	mov ah, 0 
+	int 16h
+	
+	call EnterLevel
 	
 	cmp [level], 1
 	jz dontAdjust
 	
-	mov cx, [level]
+	mov cl, [level]
+	xor ch, ch
 	loopLevel:
 		call AdjustSpeed
 	loop loopLevel
@@ -162,7 +207,6 @@ dontAdjust:
 	
 	WaitForData :
 	
-	
 	push ax
 	push bx
 	push cx
@@ -206,7 +250,6 @@ WHATEVER:
 	mov [count], 0h
 	call undraw
 	add [y], 10
-
 	call DrawBlock
 	
 	notmovdown:
@@ -215,28 +258,39 @@ WHATEVER:
 	cmp al, 10b ; Data in buffer ?
 	je WaitForData ; Wait until data available
 	in al, 60h ; Get keyboard data
+	
+	
 	cmp al, 1h ; Is it the ESC key ?
 	jne notExit
 	mov ax,3h
 	int 10h	
 	mov ax, 4c00h
 	int 21h
-	notExit:
+notExit:
+	
+	cmp al, 1dh ; Is it the Ctrl key ?
+	jne notPouse
+	call PauseDeGame
+	
+notPouse:
 	cmp al, 04bh ; Is it the LEFT key ?
 	je left
+	
 	cmp al, 04dh ; Is it the RIGHT key ?
 	jne Nright
 	jmp right
-	Nright:
+	
+Nright:
 	cmp al, 48h ; Is it the UP key ?
 	jne Nup
 	jmp up
-	Nup:
+	
+Nup:
 	cmp al, 50h ; Is it the DOWN key ?
 	jne Ndown
 	jmp down
-	Ndown:
 	
+Ndown:
 	
 	push [delayT]
 	call sleep
