@@ -49,39 +49,7 @@ proc BitPlacer
 	ret
 endp BitPlacer
 
-proc sounds
-	out     43h, al         ;  note.
-	
-	mov ax, [offset notes + bx] 
-	
-   ; mov     ax, [note]        ; Frequency number (in decimal)
-                                ;  for middle C.
-	out     42h, al         ; Output low byte.
-	mov     al, ah          ; Output high byte.
-	out     42h, al 
-	in      al, 61h         ; Turn on note (get value from
-                                ;  port 61h).
-	or      al, 00000011b   ; Set bits 1 and 0.
-	out     61h, al         ; Send new value.
-	mov     bx, 30         ; Pause for duration of note.
-pausee1:
-	mov     cx, 65535
-pausee2:
-	dec     cx
-	jne     pausee2
-	dec     bx
-	jne     pausee1
-	in      al, 61h         ; Turn off note (get value from
-                                ;  port 61h).
-	and     al, 11111100b   ; Reset bits 1 and 0.
-	out     61h, al         ; Send new value.
-		
-;	pop dx cx bx ax
-	ret
-endp sounds
-
-
-proc sleep
+proc Sleep
 	pop [adress]
 	pop cx
 	
@@ -89,44 +57,15 @@ proc sleep
 		push cx
 		
 		mov cx, 20000
-		cmp [counter], 100
-		jz dontLoop
 		@@loopb:
-		;nop
+		nop
 		loop @@loopb
-	dontLoop:
-		inc [counter]
-		cmp [counter], 150
-		jnz @@coninue
-		mov [counter], 0
-		call music
-		@@coninue:
 		pop cx
 	loop @@loopa
 
 	push [adress]
 	ret
-endp sleep
-
-proc music
-	push ax bx cx dx
-		mov bx, [np]
-		
-		call sounds
-		add [np], 2
-		mov bx, [np]
-		cmp bx, [offset notes]
-		jz startOver
-	
-	
-	jmp dontStartOver
-	startOver:
-	mov [np], 2
-	
-	dontStartOver:
-	pop dx cx bx ax
-	ret
-endp music
+endp Sleep
 
 proc CheckColor
 	;		Checks If The Piece Collides With Something
