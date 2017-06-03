@@ -1,12 +1,15 @@
-;------------------------------------------
-;Modify the palette of one color.
-;BX = color number
-;dh = red 
-;ch = green 
-;cl = blue 
-;------------------------------------------
-proc aditColor
-	push ax
+
+proc EditColor
+
+	;------------------------------------------
+	;Modify the palette of one color.
+	;BX = color number
+	;dh = red 
+	;ch = green 
+	;cl = blue 
+	;------------------------------------------
+
+	push ax bx
 	
 	mov bh,0
 	mov ax,1007h
@@ -16,11 +19,11 @@ proc aditColor
 	mov ax,1010h
 	int 10h
 	
-	pop ax
+	pop bx ax
 	ret
-endp aditColor
+endp EditColor
 
-proc aditPallette
+proc EditPallette
 	push si
 	
 	xor bx, bx
@@ -36,7 +39,7 @@ proc aditPallette
 		mov cl, [offset RGB+ si]
 		
 		
-		call aditColor
+		call EditColor
 		
 		inc bl
 		inc si
@@ -46,9 +49,9 @@ proc aditPallette
 	mov bl, 0
 	xor cx, cx
 	xor dh, dh
-	call aditColor
+	call EditColor
 
 	pop si
 	
 	ret
-endp aditPallette
+endp EditPallette

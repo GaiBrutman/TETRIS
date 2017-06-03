@@ -7,8 +7,8 @@ proc OpenShowBmp near
 	je @@ExitProc
 	call ReadBmpHeader
 	; from  here assume bx is global param with file handle. 
-	call ReadBmpPalette
-	call CopyBmpPalette
+	call ReadBmpPallette
+	call CopyBmpPallette
 	call ShowBMP
 	call CloseBmpFile
 @@ExitProc:
@@ -51,26 +51,26 @@ proc ReadBmpHeader	near
 	ret
 endp ReadBmpHeader
 
-proc ReadBmpPalette near ; Read BMP file color palette, 256 colors * 4 bytes (400h)
+proc ReadBmpPallette near ; Read BMP file color pallette, 256 colors * 4 bytes (400h)
 						 ; 4 bytes for each color BGR + null)			
 	push cx
 	push dx
 	mov ah,3fh
 	mov cx,400h
-	mov dx,offset Palette
+	mov dx,offset Pallette
 	int 21h
 	pop dx
 	pop cx	
 	ret
-endp ReadBmpPalette
+endp ReadBmpPallette
 
 ; Will move out to screen memory the colors
 ; video ports are 3C8h for number of first color
 ; and 3C9h for all rest
-proc CopyBmpPalette	near
+proc CopyBmpPallette	near
 	push cx
 	push dx
-	mov si,offset Palette
+	mov si,offset Pallette
 	mov cx,256
 	mov dx,3C8h
 	mov al,0  ; black first							
@@ -91,7 +91,7 @@ CopyNextColor:
 	pop dx
 	pop cx
 	ret
-endp CopyBmpPalette
+endp CopyBmpPallette
 
 proc ShowBMP 
 ; BMP graphics are saved upside-down.
@@ -136,12 +136,13 @@ proc ShowBMP
 	ret
 endp ShowBMP 
 
-proc PrintStart
+proc PrintBmp
+	pop [adress]
+	pop dx
 	mov [BmpLeft], 0
 	mov [BmpTop],0
 	mov [BmpColSize], 320
 	mov [BmpRowSize], 200
-	mov dx,offset StartScreenName
 	call OpenShowBmp 
 	cmp [ErrorFile], 1
 	jne exit_4
@@ -150,22 +151,6 @@ exitError_4:
 	mov ah,9
 	int 21h
 exit_4:
+	push [adress]
 	ret
-endp PrintStart
-
-proc PrintInstr
-	mov [BmpLeft], 0
-	mov [BmpTop],0
-	mov [BmpColSize], 320
-	mov [BmpRowSize], 200
-	mov dx,offset InstructionsName
-	call OpenShowBmp 
-	cmp [ErrorFile], 1
-	jne exit_5
-exitError_5:
-    mov dx, offset BmpFileErrorMsg
-	mov ah,9
-	int 21h
-exit_5:
-	ret
-endp PrintInstr
+endp PrintBmp

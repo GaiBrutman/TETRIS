@@ -1,71 +1,71 @@
 
 proc Flip
 	
-	;{
-	;START PROC {
-		PUSH BP
-		MOV  BP, SP
-		NUMBER EQU [WORD PTR BP + 4]
+;{
+	;start proc {
+		push bp
+		mov  bp, sp
+		number equ [word ptr bp + 4]
 		
-		PUSH AX
-		PUSH BX
-		PUSH CX
-		PUSH DX
+		push ax
+		push bx
+		push cx
+		push dx
 	;}
 	
-	;CODE {
-		XOR DX, DX
-		MOV AX, NUMBER
-		MOV NUMBER, 0
+	;code {
+		xor dx, dx
+		mov ax, number
+		mov number, 0
 		
-		@@ROW_LOOP: ;{
-			XOR CX, CX
+		@@row_loop: ;{
+			xor cx, cx
 			
-			@@COL_LOOP: ;{
-				MOV BX, AX
-				SHR BX, CL
-				AND BX, 1
+			@@col_loop: ;{
+				mov bx, ax
+				shr bx, cl
+				and bx, 1
 				
-				PUSH AX
-				PUSH CX
+				push ax
+				push cx
 				
-				MOV  AX, 4
-				MUL  CL
-				ADD  AX, 3
-				SUB  AX, DX
-				MOV  CL, AL
+				mov  ax, 4
+				mul  cl
+				add  ax, 3
+				sub  ax, dx
+				mov  cl, al
 				
-				SHL BX, CL
-				ADD NUMBER, BX
+				shl bx, cl
+				add number, bx
 				
-				POP CX
-				POP AX
+				pop cx
+				pop ax
 				
-				INC CL
-				CMP CL, 4
-				JNZ @@COL_LOOP
+				inc cl
+				cmp cl, 4
+				jnz @@col_loop
 			;}
 			
-			SHR AX, 4
-			INC DX
-			CMP DX, 4
-			JNZ @@ROW_LOOP
+			shr ax, 4
+			inc dx
+			cmp dx, 4
+			jnz @@row_loop
 		;}
 	;}
 	
-	@@END_PROC: ;{
+	@@end_proc: ;{
 		
-		call FlipFix
+		call flipfix
 		
-		POP DX
-		POP CX
-		POP BX
-		POP AX
+		pop dx
+		pop cx
+		pop bx
+		pop ax
 		
 		
 		
-		POP BP
-		RET
+		pop bp
+		ret
 	;}
 ;}
 	
@@ -84,7 +84,7 @@ proc FlipFix
 	
 endp FlipFix
 
-proc draw
+proc Draw
 	; ip | parameter1
 	; ^
 	
@@ -113,9 +113,9 @@ proc draw
 	
 	ret
 		
-endp draw
+endp Draw
 
-proc DrawB
+proc DrawBlock
 	push ax
 	
 	cmp al, 0
@@ -124,12 +124,12 @@ proc DrawB
 	mov [sizeX], 10
 	mov [sizeY], 10
 	add al, 7
-	call draw
+	call Draw
 	
 	mov [sizeX], 9
 	mov [sizeY], 9
 	sub al, 7
-	call draw
+	call Draw
 	
 	
 	mov al, 15
@@ -156,13 +156,13 @@ proc DrawB
 	
 	mov [sizeX], 10
 	mov [sizeY], 10
-	call draw
+	call Draw
 	
 	pop ax
 	ret
-endp DrawB
+endp DrawBlock
 
-proc DrawBlock
+proc DrawPiece
 	; ip | parameter1
 	; ^
 	push ax
@@ -209,18 +209,16 @@ proc DrawBlock
 		mov [loopcount2], 4
 		loopDraw2:
 			shl [form], 1
-			jc toDrawS
-			notToDrawS:
-			jmp againS
-			toDrawS:
-			;mov [sizeX], 10
-			;mov [sizeY], 10
+			jc @@toDraw
+			@@notToDraw:
+			jmp @@again
+			@@toDraw:
 			
 			push cx dx
-			call drawB
+			call DrawBlock
 			pop dx cx
 			
-			againS:
+			@@again:
 			add cx, 10
 			dec [loopcount2]
 			cmp [loopcount2], 0
@@ -240,12 +238,12 @@ proc DrawBlock
 	pop ax
 	
 	ret
-endp DrawBlock
+endp DrawPiece
 
-proc undraw
+proc UnDraw
 	push [word ptr color]
 	mov [color], 0h
-	call DrawBlock
+	call DrawPiece
 	pop [word ptr color]
 	ret
-endp undraw
+endp UnDraw

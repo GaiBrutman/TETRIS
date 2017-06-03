@@ -1,144 +1,144 @@
 
-	PROC TEXT_PRINTDEC
+	proc Text_Printdec
 	;{
-		;Input: Decimal array offset (array you want to print)
-		;PRINTS A DECIMAL NUMBER.
+		;input: decimal array offset (array you want to print)
+		;prints a decimal number.
 		
-		;START PROC {
-			PUSH BP
-			MOV  BP, SP
+		;start proc {
+			push bp
+			mov  bp, sp
 			
-			PUSH AX
-			PUSH BX
-			PUSH DX
-			PUSH SI
-			PUSH DI
+			push ax
+			push bx
+			push dx
+			push si
+			push di
 			
-			ARR_OFF EQU [BP + 4]
+			arr_off equ [bp + 4]
 		;}
 		
-		;CODE {
-			MOV SI, ARR_OFF
-			MOV DI, OFFSET PRINT_DEC; print_dec db 0,0,0,0,0,'$'
-			XOR BX, BX
+		;code {
+			mov si, arr_off
+			mov di, offset print_dec; print_dec db 0,0,0,0,0,'$'
+			xor bx, bx
 			
-			@@COPY_ARR: ;{
-				MOV AL, [SI + BX]
-				MOV [DI + BX], AL
+			@@copy_arr: ;{
+				mov al, [si + bx]
+				mov [di + bx], al
 				
-				INC BX
-				CMP BX, 5
-				JNZ @@COPY_ARR
+				inc bx
+				cmp bx, 5
+				jnz @@copy_arr
 			;}
 			
-			XOR BX, BX
+			xor bx, bx
 			
-			@@TO_ASCII: ;{
-				ADD [BYTE PTR DI + BX], '0'
-				INC BX
-				CMP BX, 5
-				JNZ @@TO_ASCII
+			@@to_ascii: ;{
+				add [byte ptr di + bx], '0'
+				inc bx
+				cmp bx, 5
+				jnz @@to_ascii
 			;}
 			
-			XOR BX, BX
+			xor bx, bx
 			
-			@@CHECK_ZERO: ;{
-				CMP [BYTE PTR DI + BX], '0'
-				JNZ @@PRINT_NUM
-				MOV [BYTE PTR DI + BX], ' '
+			@@check_zero: ;{
+				cmp [byte ptr di + bx], '0'
+				jnz @@print_num
+				mov [byte ptr di + bx], ' '
 				
-				INC BX
-				CMP BX, 4
-				JNZ @@CHECK_ZERO
+				inc bx
+				cmp bx, 4
+				jnz @@check_zero
 			;}
 			
 			
-			@@PRINT_NUM: ;{
+			@@print_num: ;{
 				
-				XCHG DI, DX
-				MOV  AH, 9
-				INT    21h
+				xchg di, dx
+				mov  ah, 9
+				int    21h
 			;}
 			
 		;}
 		
-		@@END_PROC: ;{
-			POP DI
-			POP SI
-			POP DX
-			POP BX
-			POP AX
+		@@end_proc: ;{
+			pop di
+			pop si
+			pop dx
+			pop bx
+			pop ax
 			
-			POP BP
-			RET 2
+			pop bp
+			ret 2
 		;}
 	;}
-	ENDP TEXT_PRINTDEC
+	endp Text_Printdec
 
 ;*****************************************************************************
 ;*****************************************************************************
 
-PROC HEX2DEC
+proc HEX2DEC
 ;{
 	;input: array offset (length = 5 bytes), number(word)
-	;START_PROC: {
-		PUSH BP
-		MOV  BP, SP
+	;start_proc: {
+		push bp
+		mov  bp, sp
 		
-		DEC_OFF EQU [WORD PTR BP + 6]
-		NUMBER 	EQU [WORD PTR BP + 4]
+		dec_off equ [word ptr bp + 6]
+		number 	equ [word ptr bp + 4]
 		
-		PUSH AX
-		PUSH BX
-		PUSH CX
-		PUSH DX
+		push ax
+		push bx
+		push cx
+		push dx
 	;}
 	
-	;CODE {
-		;BX = LAST ELEMENT IN ARR_DEC
-		MOV BX, DEC_OFF
-		MOV CX, 5
+	;code {
+		;bx = last element in arr_dec
+		mov bx, dec_off
+		mov cx, 5
 		
-		@@ZERO_LOOP: ;{
-			MOV [BYTE PTR BX], 0
-			INC BX
-			LOOP @@ZERO_LOOP
+		@@zero_loop: ;{
+			mov [byte ptr bx], 0
+			inc bx
+			loop @@zero_loop
 		;}
 		
-		DEC BX
-		DEC DEC_OFF
+		dec bx
+		dec dec_off
 		
-		MOV AX, NUMBER
-		MOV CX, 10
-		XOR DX, DX
+		mov ax, number
+		mov cx, 10
+		xor dx, dx
 		
-		@@DIV_LOOP:
+		@@div_loop:
 		;{
-			DIV  CX
-			XCHG [BX], DL
+			div  cx
+			xchg [bx], dl
 			
-			CMP AX, 0
-			JZ  @@END_PROC
+			cmp ax, 0
+			jz  @@end_proc
 			
-			@@EXIT_DIV: ;{
-				DEC BX
-				CMP BX, DEC_OFF
-				JNZ @@DIV_LOOP
+			@@exit_div: ;{
+				dec bx
+				cmp bx, dec_off
+				jnz @@div_loop
 			;}
 		;}
 		
 	;}
 	
-	@@END_PROC: ;{
-		POP DX
-		POP CX
-		POP BX
-		POP AX
-		POP BP
-		RET 4
+	@@end_proc: ;{
+		pop dx
+		pop cx
+		pop bx
+		pop ax
+		pop bp
+		ret 4
 	;}
 ;}
-ENDP HEX2DEC
+endp HEX2DEC
 	
 ;*****************************************************************************
 ;*****************************************************************************
@@ -219,7 +219,7 @@ proc PrintHighScore
 		mov al,  [Buffer + bx]
 		
 		push ax
-		call PrintScore
+		call PrintNum
 		
 		mov dl, 10
 		mov ah, 2
@@ -339,7 +339,7 @@ proc PushList
 	ret
 endp PushList
 
-proc PrintScore
+proc PrintNum
 	pop [adress]
 	pop dx
 	
@@ -348,11 +348,11 @@ proc PrintScore
 	call HEX2DEC
 	
 	push offset score_arr
-	call TEXT_PRINTDEC
+	call Text_Printdec
 	
 	push [adress]
 	ret
-endp PrintScore
+endp PrintNum
 
 
 proc EnterLevel
@@ -381,7 +381,7 @@ proc EnterLevel
 	AAD
 	
 	push 100
-	call sleep
+	call Sleep
 	
 	cmp al, 1
 	jb @@start

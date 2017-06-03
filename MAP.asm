@@ -1,4 +1,4 @@
-proc PauseDeGame
+proc PauseGame
 	
 	push ax bx cx dx
 	
@@ -9,7 +9,7 @@ proc PauseDeGame
 	mov [sizeX], 60
 	mov [sizeY], 30
 	mov al, 1
-	call draw
+	call Draw
 
 	mov dx, 090eh ; Row, Column
 	mov bx, 0 ; Page number, 0 for graphics modes
@@ -19,8 +19,6 @@ proc PauseDeGame
 	mov dx, offset PauseStr
 	mov ah, 9h
 	int 21h
-	
-	mov [counter], 0
 
 	
    @@loopEnter:
@@ -34,9 +32,11 @@ proc PauseDeGame
 	pop dx cx bx ax
 	
 	ret
-endp PauseDeGame
+endp PauseGame
 
 proc PauseSave
+
+	;		Saves The Color Value Before Printing On Top
 	
 	push ax bx cx dx
 	
@@ -69,6 +69,8 @@ proc PauseSave
 endp PauseSave
 
 proc PauseDraw
+
+	;		Prints The Color Value After Printing On Top
 	
 	push ax bx cx dx
 	
@@ -80,7 +82,7 @@ proc PauseDraw
 		@@loopb:
 			push bx cx dx
 			mov al, [offset save + bx]
-			call drawB
+			call DrawBlock
 			pop dx cx bx
 			
 			inc bx
@@ -108,7 +110,7 @@ proc DrawWall
 	mov [sizeX], 140
 	mov [sizeY], 200
 	
-	call draw
+	call Draw
 	
 	mov al, 0
 	mov bh, 0h
@@ -117,12 +119,12 @@ proc DrawWall
 	mov [sizeX], 120
 	mov [sizeY], 180
 	
-	call draw
+	call Draw
 	
 	ret
 endp DrawWall
 
-proc checkLose
+proc CheckLose
 	
 	push ax
 	push bx
@@ -153,7 +155,7 @@ proc checkLose
 		
 		ret
 		
-		Lost:
+		Lost:	;	Continues To HighScore Screen
 		
 		call AddHighScore
 		
@@ -189,9 +191,9 @@ proc checkLose
 		mov ax, 4c00h
 		int 21h
 	
-endp checkLose
+endp CheckLose
 
-proc checkRow
+proc CheckRows
 	push ax
 	push bx
 	push cx
@@ -202,7 +204,6 @@ proc checkRow
 	mov cx, 70
 	mov dx, 180
 	
-	;mov [loopcount1], 17
 	@@loopa:
 		mov [loopcount2], 12
 		@@loopb:
@@ -220,7 +221,7 @@ proc checkRow
 			
 			sub dx, 10
 			push [delayT]
-			call sleep
+			call Sleep
 			call DeleteRow
 			jmp @@again
 		
@@ -237,7 +238,7 @@ proc checkRow
 	pop ax
 	
 	ret
-endp checkRow
+endp CheckRows
 
 proc DeleteRow
 	
@@ -251,6 +252,9 @@ proc DeleteRow
 	
 	call CheckLevel
 	
+	mov [note], 3416
+	call Sound
+	
 	mov cx, 70
 	
 	@@loopa:
@@ -261,12 +265,9 @@ proc DeleteRow
 			mov ah,0Dh
 			int 10h ; return al the pixel value read
 			
-;			mov [sizeX], 10
-;			mov [sizeY], 10
-			
 			push cx dx
 			add dx, 10
-			call drawB
+			call DrawBlock
 			pop dx cx
 			
 			add cx, 10
@@ -276,7 +277,6 @@ proc DeleteRow
 		
 		sub dx, 10
 		sub cx, 120
-		dec [loopcount1]
 		cmp dx, 10
 		jnz @@loopa
 	
@@ -288,5 +288,3 @@ proc DeleteRow
 	ret
 
 endp DeleteRow
-
-;	[]	-	12 * 18	,		(X, Y) = (70, 10)

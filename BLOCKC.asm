@@ -1,6 +1,5 @@
-proc bitPlacer
+proc BitPlacer
 		push cx
-;	push [loopcount2]
 	
 	mov ax, 8000h
 
@@ -48,10 +47,9 @@ proc bitPlacer
 ;	pop [loopcount2]
 	pop cx	
 	ret
-endp bitPlacer
+endp BitPlacer
 
-proc sleep
-;	push ax bx cx dx
+proc Sleep
 	pop [adress]
 	pop cx
 	
@@ -62,17 +60,15 @@ proc sleep
 		@@loopb:
 		nop
 		loop @@loopb
-		
 		pop cx
 	loop @@loopa
-	
-;	pop dx cx bx ax
-	
+
 	push [adress]
 	ret
-endp sleep
+endp Sleep
 
-proc checkColor
+proc CheckColor
+	;		Checks If The Piece Collides With Something
 	pop [adress]
 	
 	pop [check]
@@ -107,7 +103,7 @@ proc checkColor
 			jc Try
 			jmp NotTry
 			Try:
-			call bitPlacer
+			call BitPlacer
 			pop [tempForm]
 			test [tempForm], ax
 			push [tempForm]
@@ -139,9 +135,10 @@ proc checkColor
 	pop [form]
 	push [adress]
 	ret
-endp checkColor
+endp CheckColor
 
 proc CheckFlip
+	;		Checks If The Piece Can Flip Without Deleting Something
 	pop [adress]
 	
 	pop [canFlip]
@@ -180,13 +177,13 @@ proc CheckFlip
 	jmp @@notCollides
 	
 	@@collides:
-		mov [canFlip], 1h
+		mov [canFlip], 0h
 		pop [flipedForm]
 		pop dx cx bx ax
 		push [adress]
 		ret
 	@@notCollides:
-	mov [canFlip], 0h
+	mov [canFlip], 1h
 	pop [flipedForm]
 	pop dx cx bx ax
 	push [adress]
